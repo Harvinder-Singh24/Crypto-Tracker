@@ -1,3 +1,4 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,10 +19,10 @@ void start_download(youTube_link, BuildContext context) async {
   final result = await FlutterYoutubeDownloader.downloadVideo(
       youTube_link, "Video Title goes Here", 18);
   print(result);
-  showToast("Invalid Download Link",
-      backgroundColor: Colors.grey,
-      context: context,
-      animation: StyledToastAnimation.fade);
+  FirebaseStorage fs = FirebaseStorage.instance;
+  Reference rootRefernce = fs.ref();
+  Reference childRootrefence = rootRefernce.child("Videos").child("video");
+  childRootrefence.putFile(result);
 }
 
 class _HomePageState extends State<HomePage> {
