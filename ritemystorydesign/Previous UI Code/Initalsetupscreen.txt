@@ -1,0 +1,841 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:magic_8_ball/authenticate/login.dart';
+import 'package:magic_8_ball/services/themeManager.dart';
+import 'package:magic_8_ball/utils/theme.dart';
+import 'package:magic_8_ball/walkthroughScreens/setupData.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class InitialSetupScreen extends StatefulWidget {
+  const InitialSetupScreen({Key? key}) : super(key: key);
+
+  @override
+  _InitialSetupScreenState createState() => _InitialSetupScreenState();
+}
+
+class _InitialSetupScreenState extends State<InitialSetupScreen> {
+  int currentPage = 1; // starts from 1 ang goes up to 3
+  final page1Key = new GlobalKey();
+  final page2Key = new GlobalKey();
+  final page3Key = new GlobalKey();
+
+  final previousKey = new GlobalKey();
+  final nextKey = new GlobalKey();
+
+  List<String> timeDropDownList = ["Morning", "Afternoon", "Evening", "Night"];
+
+  int currentThemeIndex = 0;
+  String theme = "Shady blue";
+  String notificationType = "Every Day";
+  String notificationTime = "Evening";
+  bool hasError = false;
+  TextEditingController nameController = TextEditingController();
+
+  bool loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      body: Container(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            physics: NeverScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    child: Image.asset(
+                      "assets/arrow.png",
+                      width: 40,
+                      height: 40,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      key: page1Key,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          SizedBox(
+                            height: size.height / 10,
+                          ),
+                          SizedBox(
+                            height: size.height / 6,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: AutoSizeText(
+                              "Set your name",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "VarelaRound",
+                                fontSize: 24,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 6,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: TextField(
+                              controller: nameController,
+                              maxLength: 20,
+                              style: TextStyle(
+                                fontFamily: "VarelaRound",
+                                fontSize: 20,
+                                color: DisplayTheme(
+                                        theme,
+                                        Provider.of<ThemeManager>(context)
+                                                .themeMode ==
+                                            ThemeMode.dark)
+                                    .primaryTextColor,
+                              ),
+                              onChanged: (val) {
+                                if (nameController.text.isNotEmpty) {
+                                  setState(() {
+                                    hasError = false;
+                                  });
+                                }
+                              },
+                              cursorColor: DisplayTheme(
+                                      theme,
+                                      Provider.of<ThemeManager>(context)
+                                              .themeMode ==
+                                          ThemeMode.dark)
+                                  .screenNameIconColor,
+                              decoration: InputDecoration(
+                                errorText: hasError ? "Can't be empty" : null,
+                                errorStyle: TextStyle(
+                                  fontFamily: "VarelaRound",
+                                ),
+                                counterStyle: TextStyle(
+                                  fontFamily: "VarelaRound",
+                                  color: DisplayTheme(
+                                          theme,
+                                          Provider.of<ThemeManager>(context)
+                                                  .themeMode ==
+                                              ThemeMode.dark)
+                                      .topNavBarIconColor,
+                                ),
+                                hintStyle: TextStyle(
+                                  color: DisplayTheme(
+                                          theme,
+                                          Provider.of<ThemeManager>(context)
+                                                  .themeMode ==
+                                              ThemeMode.dark)
+                                      .topNavBarIconColor,
+                                  fontSize: 20.0,
+                                  fontFamily: 'VarelaRound',
+                                ),
+                                hintText: "profile name",
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 6,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                    flex: 1,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: IconButton(
+                                        icon: Icon(
+                                            Icons.keyboard_backspace_sharp,
+                                            size: 32,
+                                            color: DisplayTheme(
+                                                    theme,
+                                                    Provider.of<ThemeManager>(
+                                                                context)
+                                                            .themeMode ==
+                                                        ThemeMode.dark)
+                                                .primaryTextColor),
+                                        onPressed: () {
+                                          HapticFeedback.mediumImpact();
+                                          // print("${MediaQuery.of(context).size}"); // (360,640)
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                    )),
+                                Spacer(),
+                                Expanded(
+                                  flex: 1,
+                                  child: TextButton(
+                                    onPressed: () {
+                                      HapticFeedback.mediumImpact();
+                                      if (nameController.text.isNotEmpty) {
+                                        setState(() {
+                                          currentPage++;
+                                        });
+                                        Scrollable.ensureVisible(
+                                            page2Key.currentContext!,
+                                            duration:
+                                                Duration(milliseconds: 800),
+                                            curve: Curves.fastOutSlowIn);
+                                      } else {
+                                        HapticFeedback.lightImpact();
+                                        setState(() {
+                                          hasError = true;
+                                        });
+                                      }
+                                    },
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: 'ne',
+                                        style: TextStyle(
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryTextColor,
+                                          fontFamily: "VarelaRound",
+                                          fontSize: 24,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: 'xt',
+                                            style: TextStyle(
+                                              color: DisplayTheme(
+                                                      theme,
+                                                      Provider.of<ThemeManager>(
+                                                                  context)
+                                                              .themeMode ==
+                                                          ThemeMode.dark)
+                                                  .topNavBarIconColor,
+                                              fontFamily: "VarelaRound",
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      key: page2Key,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          SizedBox(height: size.height / 16),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: AutoSizeText(
+                              "Writings reflect what you are and improve your well being!",
+                              style: TextStyle(
+                                fontFamily: "VarelaRound",
+                                color: DisplayTheme(
+                                        theme,
+                                        Provider.of<ThemeManager>(context)
+                                                .themeMode ==
+                                            ThemeMode.dark)
+                                    .topNavBarIconColor,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: RichText(
+                                text: TextSpan(
+                                    text: "RiteMyStory",
+                                    style: TextStyle(
+                                      fontFamily: "VarelaRound",
+                                      color: DisplayTheme(
+                                              theme,
+                                              Provider.of<ThemeManager>(context)
+                                                      .themeMode ==
+                                                  ThemeMode.dark)
+                                          .primaryTextColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    children: [
+                                  TextSpan(
+                                    text:
+                                        " can remind you to write diary/journal or to track your mood",
+                                    style: TextStyle(
+                                      fontFamily: "VarelaRound",
+                                      color: DisplayTheme(
+                                              theme,
+                                              Provider.of<ThemeManager>(context)
+                                                      .themeMode ==
+                                                  ThemeMode.dark)
+                                          .topNavBarIconColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                ])),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: AutoSizeText(
+                              "want automated alerts?",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "VarelaRound",
+                                fontSize: 24,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 25, right: 25),
+                            child: Container(
+                              height: 100,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 4,
+                                    child: Container(
+                                      padding: EdgeInsets.only(
+                                          left: 5, right: 5, top: 0, bottom: 0),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: DisplayTheme(
+                                                theme,
+                                                Provider.of<ThemeManager>(
+                                                            context)
+                                                        .themeMode ==
+                                                    ThemeMode.dark)
+                                            .primaryHeadingColor,
+                                        border: Border.all(
+                                            color: DisplayTheme(
+                                                    theme,
+                                                    Provider.of<ThemeManager>(
+                                                                context)
+                                                            .themeMode ==
+                                                        ThemeMode.dark)
+                                                .primaryTextColor!),
+                                      ),
+                                      child: DropdownButton<String>(
+                                        value: notificationType,
+                                        icon: Icon(Icons.keyboard_arrow_down),
+                                        dropdownColor: DisplayTheme(
+                                                theme,
+                                                Provider.of<ThemeManager>(
+                                                            context)
+                                                        .themeMode ==
+                                                    ThemeMode.dark)
+                                            .primaryHeadingColor,
+                                        style: TextStyle(
+                                          backgroundColor: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryHeadingColor,
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryTextColor,
+                                          fontFamily: 'VarelaRound',
+                                        ),
+                                        isExpanded: true,
+                                        underline: Container(height: 0),
+                                        items: <String>[
+                                          'Every Day',
+                                          'Every 2 Days',
+                                          'Never'
+                                        ].map<DropdownMenuItem<String>>(
+                                            (String value) {
+                                          return DropdownMenuItem<String>(
+                                              child: AutoSizeText(value),
+                                              value: value);
+                                        }).toList(),
+                                        onChanged: (String? val) {
+                                          HapticFeedback.heavyImpact();
+                                          setState(() {
+                                            notificationType = val!;
+                                          });
+                                        },
+                                        onTap: () {
+                                          HapticFeedback.mediumImpact();
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 30),
+                                  Expanded(
+                                      flex: 3,
+                                      child: Container(
+                                        padding: EdgeInsets.only(
+                                            left: 5,
+                                            right: 5,
+                                            top: 0,
+                                            bottom: 0),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryHeadingColor,
+                                          border: Border.all(
+                                              color: DisplayTheme(
+                                                      theme,
+                                                      Provider.of<ThemeManager>(
+                                                                  context)
+                                                              .themeMode ==
+                                                          ThemeMode.dark)
+                                                  .primaryTextColor!),
+                                        ),
+                                        child: DropdownButton<String>(
+                                          value: notificationTime,
+                                          icon: Icon(Icons.keyboard_arrow_down),
+                                          dropdownColor: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryHeadingColor,
+                                          style: TextStyle(
+                                            backgroundColor: DisplayTheme(
+                                                    theme,
+                                                    Provider.of<ThemeManager>(
+                                                                context)
+                                                            .themeMode ==
+                                                        ThemeMode.dark)
+                                                .primaryHeadingColor,
+                                            color: DisplayTheme(
+                                                    theme,
+                                                    Provider.of<ThemeManager>(
+                                                                context)
+                                                            .themeMode ==
+                                                        ThemeMode.dark)
+                                                .primaryTextColor,
+                                            fontFamily: 'VarelaRound',
+                                          ),
+                                          isExpanded: true,
+                                          underline: Container(),
+                                          items: timeDropDownList
+                                              .map<DropdownMenuItem<String>>(
+                                                  (String value) {
+                                            return DropdownMenuItem<String>(
+                                              child: AutoSizeText(value),
+                                              value: value,
+                                            );
+                                          }).toList(),
+                                          onChanged: notificationType == 'Never'
+                                              ? null
+                                              : (String? val) {
+                                                  HapticFeedback.heavyImpact();
+                                                  setState(() {
+                                                    notificationTime = val!;
+                                                  });
+                                                },
+                                          onTap: () {
+                                            HapticFeedback.mediumImpact();
+                                          },
+                                        ),
+                                      )),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: IconButton(
+                                      icon: Icon(Icons.keyboard_backspace_sharp,
+                                          size: 32,
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryTextColor),
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        setState(() {
+                                          currentPage--;
+                                        });
+                                        Scrollable.ensureVisible(
+                                            page1Key.currentContext!,
+                                            duration:
+                                                Duration(milliseconds: 800),
+                                            curve: Curves.fastOutSlowIn);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Spacer(),
+                                Expanded(
+                                  flex: 1,
+                                  child: TextButton(
+                                    onPressed: () {
+                                      HapticFeedback.mediumImpact();
+                                      setState(() {
+                                        currentPage++;
+                                      });
+                                      Scrollable.ensureVisible(
+                                          page3Key.currentContext!,
+                                          duration: Duration(milliseconds: 800),
+                                          curve: Curves.fastOutSlowIn);
+                                    },
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: 'nex',
+                                        style: TextStyle(
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryTextColor,
+                                          fontFamily: "VarelaRound",
+                                          fontSize: 24,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: 't',
+                                            style: TextStyle(
+                                              color: DisplayTheme(
+                                                      theme,
+                                                      Provider.of<ThemeManager>(
+                                                                  context)
+                                                              .themeMode ==
+                                                          ThemeMode.dark)
+                                                  .topNavBarIconColor,
+                                              fontFamily: "VarelaRound",
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      key: page3Key,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          SizedBox(height: size.height / 16),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 25),
+                            child: AutoSizeText(
+                              "Swipe to see all the themes available!",
+                              style: TextStyle(
+                                fontFamily: "VarelaRound",
+                                color: DisplayTheme(
+                                        theme,
+                                        Provider.of<ThemeManager>(context)
+                                                .themeMode ==
+                                            ThemeMode.dark)
+                                    .topNavBarIconColor,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 25),
+                            child: AutoSizeText(
+                              "Set your theme",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "VarelaRound",
+                                fontSize: 24,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 25),
+                            child: Container(
+                              height: MediaQuery.of(context).size.height / 3.5,
+                              width: MediaQuery.of(context).size.width,
+                              child: PageView.builder(
+                                itemBuilder: (BuildContext context, int index) {
+                                  return Transform.scale(
+                                    scale: index == currentThemeIndex ? 1 : 0.9,
+                                    child: Container(
+                                      padding: EdgeInsets.all(10),
+                                      margin:
+                                          EdgeInsets.only(left: 2, right: 2),
+                                      decoration: BoxDecoration(
+                                        //color: color,
+                                        gradient: DisplayTheme(
+                                                AllThemes[index],
+                                                Provider.of<ThemeManager>(
+                                                            context)
+                                                        .themeMode ==
+                                                    ThemeMode.dark)
+                                            .themeGradient,
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      height:
+                                          MediaQuery.of(context).size.height /
+                                              3.5,
+                                      width:
+                                          MediaQuery.of(context).size.width / 2,
+                                      child: Center(
+                                        child: AutoSizeText(
+                                          "${AllThemes[index]}",
+                                          style: TextStyle(
+                                            fontFamily: "VarelaRound",
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                itemCount: AllThemes.length,
+                                onPageChanged: loading
+                                    ? null
+                                    : (int index) {
+                                        setState(() {
+                                          currentThemeIndex = index;
+                                          theme = AllThemes[index];
+                                        });
+                                      },
+                                controller:
+                                    PageController(viewportFraction: 0.7),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 15, right: 0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: IconButton(
+                                      icon: Icon(Icons.keyboard_backspace_sharp,
+                                          size: 32,
+                                          color: DisplayTheme(
+                                                  theme,
+                                                  Provider.of<ThemeManager>(
+                                                              context)
+                                                          .themeMode ==
+                                                      ThemeMode.dark)
+                                              .primaryTextColor),
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        setState(() {
+                                          currentPage--;
+                                        });
+                                        Scrollable.ensureVisible(
+                                            page2Key.currentContext!,
+                                            duration:
+                                                Duration(milliseconds: 800),
+                                            curve: Curves.fastOutSlowIn);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                Spacer(),
+                                Expanded(
+                                  flex: 1,
+                                  child: TextButton(
+                                    onPressed: () async {
+                                      HapticFeedback.mediumImpact();
+                                      // flow ends
+                                      //setting up the theme
+                                      setState(() {
+                                        loading = true;
+                                      });
+                                      final session =
+                                          await SharedPreferences.getInstance();
+                                      session.setString('theme',
+                                          AllThemes[currentThemeIndex]);
+                                      setState(() {
+                                        loading = false;
+                                      });
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setCreatingValue();
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setName(nameController.text);
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setNotifications(
+                                              notificationType == "Never"
+                                                  ? false
+                                                  : true);
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setNotificationTime(
+                                              notificationTime);
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setNotificationType(
+                                              notificationType);
+                                      Provider.of<SetupData>(context,
+                                              listen: false)
+                                          .setTheme(
+                                              AllThemes[currentThemeIndex]);
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) {
+                                        return Login(
+                                          settingUp: true,
+                                          settingUpData: {
+                                            "username": nameController.text,
+                                            "theme":
+                                                AllThemes[currentThemeIndex],
+                                            "notifications":
+                                                notificationType == "Never"
+                                                    ? false
+                                                    : true,
+                                            "notificationType":
+                                                notificationType,
+                                            "notificationTime":
+                                                notificationTime,
+                                          },
+                                        );
+                                      }));
+                                    },
+                                    child: loading
+                                        ? Center(
+                                            child: CircularProgressIndicator(
+                                              color: DisplayTheme(
+                                                      AllThemes[
+                                                          currentThemeIndex],
+                                                      false)
+                                                  .navbarIconEnableColor,
+                                            ),
+                                          )
+                                        : RichText(
+                                            text: TextSpan(
+                                              text: 'next',
+                                              style: TextStyle(
+                                                color: DisplayTheme(
+                                                        theme,
+                                                        Provider.of<ThemeManager>(
+                                                                    context)
+                                                                .themeMode ==
+                                                            ThemeMode.dark)
+                                                    .primaryTextColor,
+                                                fontFamily: "VarelaRound",
+                                                fontSize: 24,
+                                              ),
+                                              children: [
+                                                TextSpan(
+                                                  text: '',
+                                                  style: TextStyle(
+                                                    color: DisplayTheme(
+                                                            theme,
+                                                            Provider.of<ThemeManager>(
+                                                                        context)
+                                                                    .themeMode ==
+                                                                ThemeMode.dark)
+                                                        .topNavBarIconColor,
+                                                    fontFamily: "VarelaRound",
+                                                    fontSize: 24,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: size.height / 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,159 @@
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:magic_8_ball/authenticate/login.dart';
+import 'package:magic_8_ball/services/themeManager.dart';
+import 'package:magic_8_ball/utils/theme.dart';
+import 'package:magic_8_ball/walkthroughScreens/setupData.dart';
+import 'package:magic_8_ball/walkthroughScreens/setupScreen.dart';
+import 'package:provider/provider.dart';
+
+class LandingScreen extends StatefulWidget {
+  const LandingScreen({Key? key}) : super(key: key);
+
+  @override
+  _LandingScreenState createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  String theme = "Shady blue";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        padding: EdgeInsets.all(20),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 40,
+              right: 10,
+              left: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    backgroundImage: AssetImage("assets/riteMyStory.png"),
+                    minRadius: 40,
+                    maxRadius: 50,
+                    backgroundColor: DisplayTheme(
+                        theme,
+                        Provider.of<ThemeManager>(context).themeMode ==
+                            ThemeMode.dark)
+                        .primaryHeadingColor,
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  AutoSizeText(
+                    "Hi there!",
+                    style: TextStyle(
+                      color: DisplayTheme(
+                              theme,
+                              Provider.of<ThemeManager>(context).themeMode ==
+                                  ThemeMode.dark)
+                          .primaryTextColor,
+                      fontFamily: 'VarelaRound',
+                      fontSize: 24,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(15),
+                child: AutoSizeText(
+                  "We take less than 30 seconds to personalize the app for you ☺️",
+                  style: TextStyle(
+                    color: DisplayTheme(
+                        theme,
+                        Provider.of<ThemeManager>(context).themeMode ==
+                            ThemeMode.dark)
+                        .primaryTextColor,
+                    fontFamily: 'VarelaRound',
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 80,
+              child: ElevatedButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  Navigator.push(context, MaterialPageRoute(builder: (context){
+                    return InitialSetupScreen();
+                  }));
+                },
+                child: AutoSizeText(
+                  "Let's get started",
+                  style: TextStyle(
+                    color: DisplayTheme(
+                            theme,
+                            Provider.of<ThemeManager>(context).themeMode ==
+                                ThemeMode.dark)
+                        .primaryTextColor,
+                    fontFamily: 'VarelaRound',
+                    fontSize: 16,
+                  ),
+                ),
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  )),
+                  minimumSize: MaterialStateProperty.all(
+                      Size(MediaQuery.of(context).size.width - 50, 50)),
+                  backgroundColor: MaterialStateProperty.all(DisplayTheme(
+                          theme,
+                          Provider.of<ThemeManager>(context).themeMode ==
+                              ThemeMode.dark)
+                      .primaryHeadingColor),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 10,
+              child: ElevatedButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  Provider.of<SetupData>(context,listen: false).unsetCreatingValue();
+                  Navigator.push(context, MaterialPageRoute(builder: (context){
+                    return Login(
+                      settingUp: false,
+                      settingUpData: {},
+                    );
+                  }));
+                },
+                child: AutoSizeText(
+                  "I already have an account",
+                  style: TextStyle(
+                    color: DisplayTheme(
+                            theme,
+                            Provider.of<ThemeManager>(context).themeMode ==
+                                ThemeMode.dark)
+                        .primaryTextColor,
+                    fontFamily: 'VarelaRound',
+                    fontSize: 16,
+                  ),
+                ),
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  )),
+                  backgroundColor: MaterialStateProperty.all(DisplayTheme(
+                          theme,
+                          Provider.of<ThemeManager>(context).themeMode ==
+                              ThemeMode.dark)
+                      .primaryHeadingColor),
+                  minimumSize: MaterialStateProperty.all(
+                      Size(MediaQuery.of(context).size.width - 50, 50)),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}

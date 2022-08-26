@@ -1,0 +1,112 @@
+
+import telegram.ext as Bot
+import Task1SupportResistance
+import yfinance
+import pandas as pd
+import numpy as np
+import mplfinance
+import matplotlib.dates as mpl_dates
+from datetime import datetime, timedelta
+
+TOKEN = '5487092264:AAHcqAcf3q31Z0Dn35-o2FUfGpYQfYDdzvI'
+
+
+MAX = 100000
+
+def get_min_3(df , lenght) :
+
+  firstmin = MAX
+  secmin = MAX
+  thirdmin = MAX
+  n=lenght
+  arr=df
+  for i in range(0, n):
+
+      # Check if current element
+      # is less than firstmin,
+      # then update first,second
+      # and third
+
+      if arr[i] < firstmin:
+          thirdmin = secmin
+          secmin = firstmin
+          firstmin = arr[i]
+
+      # Check if current element is
+      # less than secmin then update
+      # second and third
+      elif arr[i] < secmin:
+          thirdmin = secmin
+          secmin = arr[i]
+
+      # Check if current element is
+      # less than,then update third
+      elif arr[i] < thirdmin:
+          thirdmin = arr[i]
+  return firstmin, secmin, thirdmin
+
+def get_current_price(symbol , period):
+    ticker = yfinance.Ticker(symbol)
+    todays_data = ticker.history(period=period)
+    todays_data
+    return todays_data['Close'][0]
+
+def start(update , context) :
+    update.message.reply_text("""
+    Welcome to the Bot :) \nUse /help to know about me
+    """)
+
+def help(update, context) :
+    update.message.reply_text(""" 1. Write your stock name using /stock + name + days + candel_interval \n 2. [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo] valid intervals
+    """)
+
+def getsupportresistance(update , context) :
+    stock_name = context.args[0]
+    days = context.args[1]
+    interval = context.args[2]
+
+    ticker_symbol = stock_name
+    ticker = yfinance.Ticker(ticker_symbol)
+
+    start_date = datetime.now() - \
+                       timedelta(days = int(days))
+    end_date = datetime.now()
+
+    df = ticker.history(interval=interval , start=start_date, end=end_date)
+
+    df['Date'] = pd.to_datetime(df.index)
+    #[12 ,10 ,13,26] [10,12,13,26]
+    #df['Date'] = df['Date'].apply(mpl_dates.date2num)
+    df = df.loc[:, ['Date', 'Open', 'High', 'Low', 'Close']]
+
+    firsup , secondsup , thirdsup = get_min_3(df['Low'] , len(df['Low']))
+    firres , secondres , thirdres = get_min_3(df['High'] , len(df['High']))
+    current_price = f"{get_current_price(stock_name,interval):.2f}"
+
+    update.message.reply_text(f"Price For the given stock {current_price}")
+
+    if (get_current_price(stock_name , interval) > firsup) and (get_current_price(stock_name , interval) > secondsup) and (get_current_price(stock_name , interval) > thirdsup) :
+        update.message.reply_text(f"Breakout Done From Support Current Price of Stock {current_price}")
+
+    elif (get_current_price(stock_name , interval) > firres) and (get_current_price(stock_name , interval) > secondres) and (get_current_price(stock_name , interval) > thirdres) :
+        update.message.reply_text(f"Breakout Done From Resistance Current Price of Stock {current_price}")
+
+    else :
+        update.message.reply_text(f"Support for the stock:\n {firsup:.2f},\n{secondsup:.2f},\n{thirdsup:.2f} \n Resistance for the stock : \n{firres:.2f},\n{secondres:.2f},\n{thirdres:.2f}")
+
+
+
+updater = Bot.Updater(TOKEN , use_context=True)
+disp = updater.dispatcher
+
+
+#disp.add_handler(Bot.MessageHandler(Bot.Filters.text, guessnumber))
+
+disp.add_handler(Bot.CommandHandler("start", start))
+disp.add_handler(Bot.CommandHandler("help", help))
+disp.add_handler(Bot.CommandHandler("stock", getsupportresistance))
+
+
+
+updater.start_polling()
+updater.idle()
