@@ -1,51 +1,38 @@
-class Data {
+class CryptoCurrency {
   String? id;
   String? symbol;
   String? name;
   String? image;
-  String? currentPrice;
-  String? marketCap;
-  String? marketCapRank;
-  String? high24;
-  String? low24;
-  String? pricechange24;
-  String? priceChangePercentage24;
-  String? ciculatingSupply;
-  String? ath;
-  String? at1;
+  double? currentPrice;
+  double? marketCap;
+  int? marketCapRank;
+  double? high24;
+  double? low24;
+  double? priceChange24;
+  double? priceChangePercentage24;
+  double? circulatingSupply;
+  double? ath;
+  double? atl;
+  bool isFavorite = false;
 
-  Data({
-    required this.id,
-    required this.symbol,
-    required this.name,
-    required this.image,
-    required this.currentPrice,
-    required this.marketCap,
-    required this.marketCapRank,
-    required this.high24,
-    required this.low24,
-    required this.pricechange24,
-    required this.priceChangePercentage24,
-    required this.ciculatingSupply,
-    required this.ath,
-    required this.at1,
-  });
+  CryptoCurrency({required this.id, required this.symbol, required this.name, required this.image, required this.currentPrice, required this.marketCap, required this.marketCapRank, required this.high24, required this.low24, required this.priceChange24, required this.priceChangePercentage24, required this.circulatingSupply, required this.ath, required this.atl});
 
-  factory Data.fromJson(Map<String, dynamic> map) {
-    return Data(
-        id: map['id'],
-        symbol: map['symbol'],
-        name: map['name'],
-        image: map['image'],
-        currentPrice: map['current_price'],
-        marketCap: map['market_cap'],
-        marketCapRank: map['market_cap_rank'],
-        high24: map['high_24h'],
-        low24: map['low_24h'],
-        pricechange24: map['price_change_24h'],
-        priceChangePercentage24: map['price_change_percentage_24h'],
-        ciculatingSupply: map['circuating_supply'],
-        ath: map['ath'],
-        at1: map['at1']);
+  factory CryptoCurrency.fromJSON(Map<dynamic, dynamic> map) {
+    return CryptoCurrency(
+        id: map["id"],
+        symbol: map["symbol"],
+        name: map["name"],
+        image: map["image"],
+        currentPrice: double.parse(map["current_price"].toString()),
+        marketCap: double.parse(map["market_cap"].toString()),
+        marketCapRank: map["market_cap_rank"],
+        high24: double.parse(map["high_24h"].toString()),
+        low24: double.parse(map["low_24h"].toString()),
+        priceChange24: double.parse(map["price_change_24h"].toString()),
+        priceChangePercentage24: double.parse(map["price_change_percentage_24h"].toString()),
+        circulatingSupply: double.parse(map["circulating_supply"].toString()),
+        ath: double.parse(map["ath"].toString()),
+        atl: double.parse(map["atl"].toString())
+    );
   }
 }
